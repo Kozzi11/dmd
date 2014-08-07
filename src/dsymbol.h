@@ -136,6 +136,8 @@ class Dsymbol : public RootObject
 public:
     Identifier *ident;
     Dsymbol *parent;
+    Dsymbol *naliasthis;
+    Dsymbol *laliasthis;
     Symbol *csym;               // symbol for code generator
     Symbol *isym;               // import version of csym
     const utf8_t *comment;     // documentation comment for this Dsymbol

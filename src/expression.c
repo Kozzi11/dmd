@@ -3118,8 +3118,12 @@ Expression *IdentifierExp::semantic(Scope *sc)
             e = new DotIdExp(loc, e, ad->aliasthis->ident);
             e = new DotIdExp(loc, e, ident);
             e = e->trySemantic(sc);
-            if (e)
+            if (e) {
+            	printf("Yep type: %s\n", ad->type->toChars());
                 return e;
+            } else {
+            	printf("Noop type: %s\n", ad->type->toChars());
+            }
         }
     }
 

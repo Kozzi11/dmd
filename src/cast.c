@@ -1394,10 +1394,11 @@ Expression *castTo(Expression *e, Scope *sc, Type *t)
                         if (!(tb->ty == Tstruct && ts->sym == ((TypeStruct *)tb)->sym) &&
                             ts->sym->aliasthis)
                         {
+                        	printf("WOW ident: %s\n", ts->sym->aliasthis->ident->toChars());
                             /* Forward the cast to our alias this member, rewrite to:
                              *   cast(to)e1.aliasthis
                              */
-                            Expression *ex = resolveAliasThis(sc, e);
+                            Expression *ex = resolveAliasThis(sc, e, t);
                             result = ex->castTo(sc, t);
                             return;
                         }
@@ -1418,7 +1419,7 @@ Expression *castTo(Expression *e, Scope *sc, Type *t)
                             /* Forward the cast to our alias this member, rewrite to:
                              *   cast(to)e1.aliasthis
                              */
-                            Expression *e1 = resolveAliasThis(sc, e);
+                            Expression *e1 = resolveAliasThis(sc, e, t);
                             Expression *e2 = new CastExp(e->loc, e1, tb);
                             e2 = e2->semantic(sc);
                             result = e2;

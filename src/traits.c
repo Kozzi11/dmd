@@ -678,11 +678,11 @@ Expression *semanticTraits(TraitsExp *e, Scope *sc)
 
         Expressions *exps = new Expressions();
         if (ad->aliasthis) {
-        	AliasThis *aliasthis = (AliasThis *)ad->aliasthis;
+        	Dsymbol *aliasthis = ad->aliasthis;
         	while(aliasthis)
         	{
         		exps->push(new StringExp(e->loc, aliasthis->ident->toChars()));
-        		aliasthis = aliasthis->next;
+        		aliasthis = aliasthis->naliasthis;
         	}
         }
 

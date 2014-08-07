@@ -26,9 +26,6 @@ class AliasThis : public Dsymbol
 public:
    // alias Identifier this;
     Identifier *ident;
-    AliasThis *last;
-    AliasThis *next;
-    Type *type;
 
     AliasThis(Loc loc, Identifier *ident);
 
