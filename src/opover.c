@@ -864,18 +864,26 @@ Expression *op_overload(Expression *e, Scope *sc)
                  */
                 if (e->att1 && e->e1->type == e->att1)
                     return;
-                //printf("att bin e1 = %s\n", this->e1->type->toChars());
+                //printf("att bin e1 = %s\n", e->e1->type->toChars());
                 Dsymbol *aliasthis = ad1->aliasthis;
-                while (aliasthis) {
-					Expression *e1 = new DotIdExp(e->loc, e->e1, aliasthis->ident);
+				Expression *tresult = NULL;
+
+				while (aliasthis) {
 					BinExp *be = (BinExp *)e->copy();
 					if (!be->att1 && e->e1->type->checkAliasThisRec())
 						be->att1 = e->e1->type;
+					Expression *e1 = new DotIdExp(e->loc, e->e1, aliasthis->ident);
+					MATCH match = be->e2->type->implicitConvTo(((Declaration *)aliasthis)->type);
 					be->e1 = e1;
-					result = be->trySemantic(sc);
+					tresult = be->trySemantic(sc);
 					aliasthis = aliasthis->naliasthis;
-					if (result)
-						return;
+					if (tresult)
+					{
+						result = tresult;
+						if (match == MATCHexact || match == MATCHconst)
+							return;
+					}
+
                 }
                 return;
             }
@@ -887,23 +895,31 @@ Expression *op_overload(Expression *e, Scope *sc)
             if (ad2 && ad2->aliasthis &&
                 !(e->op == TOKassign && ad1 && ad1 == ad2))
             {
+            	//printf("att bin e2 = %s\n", e->e2->type->toChars());
                 /* Rewrite (e1 op e2) as:
                  *      (e1 op e2.aliasthis)
                  */
                 if (e->att2 && e->e2->type == e->att2)
                     return;
-                //printf("att bin e2 = %s\n", e->e2->type->toChars());
+                printf("att bin e2 = %s\n", e->e2->type->toChars());
                 Dsymbol *aliasthis = ad2->aliasthis;
-                while (aliasthis) {
-					Expression *e2 = new DotIdExp(e->loc, e->e2, aliasthis->ident);
+                Expression *tresult = NULL;
+
+				while (aliasthis) {
 					BinExp *be = (BinExp *)e->copy();
 					if (!be->att2 && e->e2->type->checkAliasThisRec())
 						be->att2 = e->e2->type;
+					Expression *e2 = new DotIdExp(e->loc, e->e2, aliasthis->ident);
+					MATCH match = ((Declaration *)aliasthis)->type->implicitConvTo(be->e1->type);
 					be->e2 = e2;
-					result = be->trySemantic(sc);
+					tresult = be->trySemantic(sc);
 					aliasthis = aliasthis->naliasthis;
-					if (result)
-						return;
+					if (tresult)
+					{
+						result = tresult;
+						if (match == MATCHexact || match == MATCHconst)
+							return;
+					}
                 }
                 return;
             }
