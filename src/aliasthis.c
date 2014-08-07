@@ -151,10 +151,10 @@ void AliasThis::semantic(Scope *sc)
         {
             Type *t = d->type;
             assert(t);
-            /*if (ad->type->implicitConvTo(t) > MATCHnomatch)
+            if (ad->type->implicitConvTo(t) == MATCHexact)
             {
                 ::error(loc, "alias this is not reachable as %s already converts to %s", ad->toChars(), t->toChars());
-            }*/
+            }
         }
 
         *aliasthis = s;
