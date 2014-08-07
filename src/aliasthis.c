@@ -50,11 +50,49 @@ Expression *resolveAliasThis(Scope *sc, Expression *e)
     return e;
 }
 
+Expression *resolveAliasThis(Scope *sc, Expression *e, Type *tt)
+{
+    Type *t = e->type->toBasetype();
+    AggregateDeclaration *ad = isAggregate(t);
+
+    if (ad && ad->aliasthis)
+    {
+    	AliasThis *aliasthis = (AliasThis *)ad->aliasthis;
+    	while (aliasthis) {
+    		if (aliasthis->type->implicitConvTo(tt)) {
+    			break;
+    		}
+    		aliasthis = aliasthis->next;
+    	}
+        bool isstatic = (e->op == TOKtype);
+        e = new DotIdExp(e->loc, e, aliasthis->ident);
+        e = e->semantic(sc);
+        if (isstatic && aliasthis->needThis())
+        {
+            /* non-@property function is not called inside typeof(),
+             * so resolve it ahead.
+             */
+            int save = sc->intypeof;
+            sc->intypeof = 1;   // bypass "need this" error check
+            e = resolveProperties(sc, e);
+            sc->intypeof = save;
+
+            e = new TypeExp(e->loc, new TypeTypeof(e->loc, e));
+            e = e->semantic(sc);
+        }
+        e = resolveProperties(sc, e);
+    }
+
+    return e;
+}
+
 AliasThis::AliasThis(Loc loc, Identifier *ident)
     : Dsymbol(NULL)             // it's anonymous (no identifier)
 {
     this->loc = loc;
     this->ident = ident;
+    this->next = NULL;
+    this->last = NULL;
 }
 
 Dsymbol *AliasThis::syntaxCopy(Dsymbol *s)
@@ -69,6 +107,8 @@ Dsymbol *AliasThis::syntaxCopy(Dsymbol *s)
 void AliasThis::semantic(Scope *sc)
 {
     Dsymbol *parent = sc->parent;
+
+    printf("Here alias %s\n", "semantic");
     if (parent)
         parent = parent->pastMixin();
     AggregateDeclaration *ad = NULL;
@@ -77,6 +117,7 @@ void AliasThis::semantic(Scope *sc)
     if (ad)
     {
         assert(ad->members);
+        AliasThis **aliasthis = (AliasThis **)&(ad->aliasthis);
         Dsymbol *s = ad->search(loc, ident);
         if (!s)
         {
@@ -88,7 +129,7 @@ void AliasThis::semantic(Scope *sc)
             return;
         }
         else if (ad->aliasthis && s != ad->aliasthis)
-            error("there can be only one alias this");
+        	aliasthis = &(((AliasThis *)(ad->aliasthis))->last->next);//error("there can be only one alias this");
 
         if (ad->type->ty == Tstruct && ((TypeStruct *)ad->type)->sym != ad)
         {
@@ -101,7 +142,7 @@ void AliasThis::semantic(Scope *sc)
         /* disable the alias this conversion so the implicit conversion check
          * doesn't use it.
          */
-        ad->aliasthis = NULL;
+        *aliasthis = NULL;
 
         Dsymbol *sx = s;
         if (sx->isAliasDeclaration())
@@ -110,6 +151,7 @@ void AliasThis::semantic(Scope *sc)
         if (d && !d->isTupleDeclaration())
         {
             Type *t = d->type;
+            ((AliasThis *)s)->type = t;
             assert(t);
             if (ad->type->implicitConvTo(t) > MATCHnomatch)
             {
@@ -117,7 +159,8 @@ void AliasThis::semantic(Scope *sc)
             }
         }
 
-        ad->aliasthis = s;
+        *aliasthis = (AliasThis *)s;
+        ((AliasThis *)ad->aliasthis)->last = *aliasthis;
     }
     else
         error("alias this can only appear in struct or class declaration, not %s", parent ? parent->toChars() : "nowhere");

@@ -37,6 +37,7 @@
 #include "hdrgen.h"
 #include "parse.h"
 #include "speller.h"
+#include "aliasthis.h"
 
 #define LOGSEMANTIC     0
 
@@ -676,8 +677,14 @@ Expression *semanticTraits(TraitsExp *e, Scope *sc)
         }
 
         Expressions *exps = new Expressions();
-        if (ad->aliasthis)
-            exps->push(new StringExp(e->loc, ad->aliasthis->ident->toChars()));
+        if (ad->aliasthis) {
+        	AliasThis *aliasthis = (AliasThis *)ad->aliasthis;
+        	while(aliasthis)
+        	{
+        		exps->push(new StringExp(e->loc, aliasthis->ident->toChars()));
+        		aliasthis = aliasthis->next;
+        	}
+        }
 
         Expression *ex = new TupleExp(e->loc, exps);
         ex = ex->semantic(sc);
