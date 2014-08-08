@@ -895,13 +895,13 @@ Expression *op_overload(Expression *e, Scope *sc)
             if (ad2 && ad2->aliasthis &&
                 !(e->op == TOKassign && ad1 && ad1 == ad2))
             {
-            	//printf("att bin e2 = %s\n", e->e2->type->toChars());
+            	printf("att bin e2 = %s\n", e->e2->type->toChars());
                 /* Rewrite (e1 op e2) as:
                  *      (e1 op e2.aliasthis)
                  */
                 if (e->att2 && e->e2->type == e->att2)
                     return;
-                printf("att bin e2 = %s\n", e->e2->type->toChars());
+
                 Dsymbol *aliasthis = ad2->aliasthis;
                 Expression *tresult = NULL;
 

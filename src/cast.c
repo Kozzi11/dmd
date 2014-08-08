@@ -24,6 +24,7 @@
 #include "scope.h"
 #include "id.h"
 #include "init.h"
+#include <typeinfo>
 
 bool isCommutative(Expression *e);
 
@@ -1301,6 +1302,7 @@ MATCH implicitConvTo(Expression *e, Type *t)
         }
     };
 
+    //printf("%s:%s:%s\n", e->type->toChars(), e->toChars(), typeid(e).name());
     ImplicitConvTo v(t);
     e->accept(&v);
     return v.result;

@@ -11749,7 +11749,8 @@ Expression *AssignExp::semantic(Scope *sc)
             warning("explicit %s assignment %s = (%s)[] is better than %s = %s",
                 atypestr, e1str, e2str, e1str, e2str);
         }
-        if (op == TOKblit)
+        AggregateDeclaration *ad = isAggregate(t2);
+        if (op == TOKblit || (t2->ty == Tstruct && ad->aliasthis))
             e2x = e2x->castTo(sc, e1->type);
         else
             e2x = e2x->implicitCastTo(sc, e1->type);
