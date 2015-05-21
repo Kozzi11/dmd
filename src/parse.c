@@ -516,7 +516,7 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
             			nextToken();
                     	if (token.ident == Id::nogc)
                     	{
-                    	    stc = STCgc;                 goto Lstc;
+                    		stc = STCgc;                 goto Lstc;
                     	}
             	}
             	error("declaration expected, not '%s'",token.toChars());
