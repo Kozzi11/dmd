@@ -506,21 +506,21 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
                 goto Lstc;
 
             case TOKnot:
-            	nextToken();
-            	switch (token.value)
-            	{
-            		case TOKfinal: stc = STCvirtual;     goto Lstc;
-            		case TOKnothrow: stc = STCthrowable; goto Lstc;
-            		case TOKpure: stc = STCimpure;       goto Lstc;
-            		case TOKat:
-            			nextToken();
-                    	if (token.ident == Id::nogc)
-                    	{
-                    		stc = STCgc;                 goto Lstc;
-                    	}
-            	}
-            	error("declaration expected, not '%s'",token.toChars());
-            	goto Lerror;
+                nextToken();
+                switch (token.value)
+                {
+                    case TOKfinal: stc = STCvirtual;     goto Lstc;
+                    case TOKnothrow: stc = STCthrowable; goto Lstc;
+                    case TOKpure: stc = STCimpure;       goto Lstc;
+                    case TOKat:
+                        nextToken();
+                        if (token.ident == Id::nogc)
+                        {
+                            stc = STCgc;                 goto Lstc;
+                        }
+                }
+                error("declaration expected, not '%s'",token.toChars());
+                goto Lerror;
             case TOKfinal:        stc = STCfinal;        goto Lstc;
             case TOKauto:         stc = STCauto;         goto Lstc;
             case TOKscope:        stc = STCscope;        goto Lstc;
@@ -972,10 +972,10 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
         storageClass &= ~(STCfinal | STCvirtual);
     if (stc & (STCthrowable | STCnothrow))
         storageClass &= ~(STCthrowable | STCnothrow);
-	if (stc & (STCimpure | STCpure))
-	    storageClass &= ~(STCimpure | STCpure);
-	if (stc & (STCgc | STCnogc))
-	    storageClass &= ~(STCgc | STCnogc);
+    if (stc & (STCimpure | STCpure))
+        storageClass &= ~(STCimpure | STCpure);
+    if (stc & (STCgc | STCnogc))
+        storageClass &= ~(STCgc | STCnogc);
 
     storageClass |= stc;
 
