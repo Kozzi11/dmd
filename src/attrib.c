@@ -385,6 +385,8 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
         scstc &= ~(STCgshared | STCshared | STCtls);
     if (stc & (STCsafe | STCtrusted | STCsystem))
         scstc &= ~(STCsafe | STCtrusted | STCsystem);
+    if (stc & (STCnotfinal | STCfinal))
+        scstc &= ~(STCfinal | STCnotfinal);
     scstc |= stc;
     //printf("scstc = x%llx\n", scstc);
 
@@ -431,6 +433,7 @@ const char *StorageClassDeclaration::stcToChars(char tmp[], StorageClass& stc)
         { STCref,          TOKref },
         { STCtls },
         { STCgshared,      TOKgshared },
+        { STCnotfinal,     TOKnot,      "!final" },
         { STCnogc,         TOKat,       "nogc" },
         { STCproperty,     TOKat,       "property" },
         { STCsafe,         TOKat,       "safe" },
