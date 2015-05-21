@@ -505,6 +505,14 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
                 stc = STCwild;
                 goto Lstc;
 
+            case TOKnot:
+                if (peekNext() == TOKfinal)
+                {
+                    nextToken();
+                    stc = STCnotfinal; goto Lstc;
+                }
+                error("declaration expected, not '%s'",token.toChars());
+                goto Lerror;
             case TOKfinal:        stc = STCfinal;        goto Lstc;
             case TOKauto:         stc = STCauto;         goto Lstc;
             case TOKscope:        stc = STCscope;        goto Lstc;
@@ -952,6 +960,9 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
         return storageClass | stc;
     }
 
+    if (stc & (STCnotfinal | STCfinal))
+        storageClass &= ~(STCfinal | STCnotfinal);
+
     storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))
@@ -1161,7 +1172,6 @@ Dsymbols *Parser::parseBlock(Dsymbol **pLastDecl, PrefixAttributes *pAttrs)
 
         default:
             a = parseDeclDefs(1, pLastDecl, pAttrs);
-            break;
     }
     return a;
 }
@@ -3533,6 +3543,13 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
                 stc = STCwild;
                 goto L1;
 
+            case TOKnot:
+                if (peek(&token)->value == TOKfinal)
+                {
+                    nextToken();
+                    stc = STCnotfinal; goto L1;
+                }
+                break;
             case TOKstatic:     stc = STCstatic;         goto L1;
             case TOKfinal:      stc = STCfinal;          goto L1;
             case TOKauto:       stc = STCauto;           goto L1;
@@ -3962,7 +3979,8 @@ L2:
             FuncDeclaration *f =
                 new FuncDeclaration(loc, Loc(), ident, storage_class | (disable ? STCdisable : 0), t);
             if (pAttrs)
-                pAttrs->storageClass = STCundefined;
+                pAttrs->storageClass &= ~(STC_FUNCATTR | STCfinal);
+
             if (tpl)
                 constraint = parseConstraint();
             Dsymbol *s = parseContracts(f);
@@ -6406,6 +6424,11 @@ bool Parser::skipAttributes(Token *t, Token **pt)
                     continue;
                 }
                 break;
+            case TOKnot:
+                t = peek(t);
+                if (t->value == TOKfinal)
+                    break;
+                goto Lerror;
             case TOKnothrow:
             case TOKpure:
             case TOKref:
