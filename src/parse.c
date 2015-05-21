@@ -512,9 +512,12 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
             		case TOKfinal: stc = STCvirtual;     goto Lstc;
             		case TOKnothrow: stc = STCthrowable; goto Lstc;
             		case TOKpure: stc = STCimpure;       goto Lstc;
-            		case TOKat: stc = STCgc;
+            		case TOKat:
             			nextToken();
-                    	if (token.ident == Id::nogc)     goto Lstc;
+                    	if (token.ident == Id::nogc)
+                    	{
+                    	    stc = STCgc;                 goto Lstc;
+                    	}
             	}
             	error("declaration expected, not '%s'",token.toChars());
             	goto Lerror;
@@ -974,7 +977,6 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
 	    storageClass &= ~(STCimpure | STCpure);
 	if (stc & (STCgc | STCnogc))
 	    storageClass &= ~(STCgc | STCnogc);
-
     storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))
@@ -3562,9 +3564,12 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
                     case TOKfinal: stc = STCvirtual;     goto L1;
                     case TOKnothrow: stc = STCthrowable; goto L1;
                     case TOKpure: stc = STCimpure;       goto L1;
-                    case TOKat: stc = STCgc;
+                    case TOKat:
                         nextToken();
-                        if (token.ident == Id::nogc)     goto L1;
+                        if (token.ident == Id::nogc)
+                        {
+                            stc = STCgc;                 goto L1;
+                        }
                 }
                 break;
             case TOKstatic:     stc = STCstatic;         goto L1;
