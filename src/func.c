@@ -626,7 +626,7 @@ void FuncDeclaration::semantic(Scope *sc)
     if (storage_class & STCscope)
         error("functions cannot be scope");
 
-    if (storage_class & STCnotfinal)
+    if (storage_class & STCvirtual)
     {
         if (ad && ad->isStructDeclaration())
              error("struct member functions cannot be virtual");
@@ -1300,7 +1300,7 @@ void FuncDeclaration::semantic3(Scope *sc)
         sc2->fes = fes;
         sc2->linkage = LINKd;
         sc2->stc &= ~(STCauto | STCscope | STCstatic | STCabstract |
-                        STCdeprecated | STCoverride | STCnotfinal |
+                        STCdeprecated | STCoverride | STCvirtual |
                         STC_TYPECTOR | STCfinal | STCtls | STCgshared | STCref | STCreturn |
                         STCproperty | STCnothrow | STCpure | STCsafe | STCtrusted | STCsystem);
         sc2->protection = Prot(PROTpublic);

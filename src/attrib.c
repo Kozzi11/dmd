@@ -385,8 +385,14 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
         scstc &= ~(STCgshared | STCshared | STCtls);
     if (stc & (STCsafe | STCtrusted | STCsystem))
         scstc &= ~(STCsafe | STCtrusted | STCsystem);
-    if (stc & (STCnotfinal | STCfinal))
-        scstc &= ~(STCfinal | STCnotfinal);
+    if (stc & (STCvirtual | STCfinal))
+        scstc &= ~(STCfinal | STCvirtual);
+    if (stc & (STCthrowable | STCnothrow))
+        scstc &= ~(STCthrowable | STCnothrow);
+    if (stc & (STCimpure | STCpure))
+        scstc &= ~(STCimpure | STCpure);
+    if (stc & (STCgc | STCnogc))
+        scstc &= ~(STCgc | STCnogc);
     scstc |= stc;
     //printf("scstc = x%llx\n", scstc);
 
@@ -433,7 +439,10 @@ const char *StorageClassDeclaration::stcToChars(char tmp[], StorageClass& stc)
         { STCref,          TOKref },
         { STCtls },
         { STCgshared,      TOKgshared },
-        { STCnotfinal,     TOKnot,      "!final" },
+        { STCvirtual,      TOKnot,      "!final" },
+		{ STCthrowable,    TOKnot,      "!nothrow" },
+		{ STCimpure,       TOKnot,      "!pure" },
+		{ STCgc,           TOKnot,      "!@gc" },
         { STCnogc,         TOKat,       "nogc" },
         { STCproperty,     TOKat,       "property" },
         { STCsafe,         TOKat,       "safe" },
