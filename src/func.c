@@ -1301,7 +1301,6 @@ void FuncDeclaration::semantic3(Scope *sc)
         sc2->linkage = LINKd;
         sc2->stc &= ~(STCauto | STCscope | STCstatic | STCabstract |
                         STCdeprecated | STCoverride | STCvirtual |
-                        STCdeprecated | STCoverride | STCnotfinal |
                         STC_TYPECTOR | STCfinal | STCtls | STCgshared | STCref | STCreturn |
                         STCproperty | STCnothrow | STCpure | STCsafe | STCtrusted | STCsystem);
         sc2->protection = Prot(PROTpublic);

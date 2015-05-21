@@ -977,6 +977,7 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
 	    storageClass &= ~(STCimpure | STCpure);
 	if (stc & (STCgc | STCnogc))
 	    storageClass &= ~(STCgc | STCnogc);
+
     storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))

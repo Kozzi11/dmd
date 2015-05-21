@@ -399,8 +399,6 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
         | STCoverride | STC_TYPECTOR | STCfinal | STCtls | STCgshared | STCref |
         STCproperty | STCnothrow | STCpure | STCsafe | STCtrusted | STCsystem);
     }
-    if (stc & (STCnotfinal | STCfinal))
-        scstc &= ~(STCfinal | STCnotfinal);
     scstc |= stc;
     //printf("scstc = x%llx\n", scstc);
 
