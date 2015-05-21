@@ -85,12 +85,15 @@ enum PURE;
 #define STCnogc          0x40000000000LL // @nogc
 #define STCvolatile      0x80000000000LL // destined for volatile in the back end
 #define STCreturn        0x100000000000LL // 'return ref' for function parameters
-#define STCnotfinal      0x200000000000LL // negate final(virtual)
+#define STCvirtual       0x200000000000LL // negate final(virtual)
+#define STCthrowable     0x400000000000LL // negate nothrow(throwable)
+#define STCimpure        0x600000000000LL // negate pure(impure)
+#define STCgc            0x800000000000LL // negate @nogc(@gc)
 #define STCdefault       0x1000000000000LL // negate final(virtual)
 
 const StorageClass STCStorageClass = (STCauto | STCscope | STCstatic | STCextern | STCconst | STCfinal |
     STCabstract | STCsynchronized | STCdeprecated | STCoverride | STClazy | STCalias |
-    STCout | STCin | STCnotfinal | STCdefault |
+    STCout | STCin | STCvirtual | STCthrowable | STCimpure | STCgc | STCdefault |
     STCmanifest | STCimmutable | STCshared | STCwild | STCnothrow | STCnogc | STCpure | STCref | STCtls |
     STCgshared | STCproperty | STCsafe | STCtrusted | STCsystem | STCdisable);
 

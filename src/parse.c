@@ -506,13 +506,18 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
                 goto Lstc;
 
             case TOKnot:
-                if (peekNext() == TOKfinal)
-                {
-                    nextToken();
-                    stc = STCnotfinal; goto Lstc;
-                }
-                error("declaration expected, not '%s'",token.toChars());
-                goto Lerror;
+            	nextToken();
+            	switch (token.value)
+            	{
+            		case TOKfinal: stc = STCvirtual;     goto Lstc;
+            		case TOKnothrow: stc = STCthrowable; goto Lstc;
+            		case TOKpure: stc = STCimpure;       goto Lstc;
+            		case TOKat: stc = STCgc;
+            			nextToken();
+                    	if (token.ident == Id::nogc)     goto Lstc;
+            	}
+            	error("declaration expected, not '%s'",token.toChars());
+            	goto Lerror;
             case TOKfinal:        stc = STCfinal;        goto Lstc;
             case TOKauto:         stc = STCauto;         goto Lstc;
             case TOKscope:        stc = STCscope;        goto Lstc;
@@ -961,8 +966,14 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
         return storageClass | stc;
     }
 
-    if (stc & (STCnotfinal | STCfinal))
-        storageClass &= ~(STCfinal | STCnotfinal);
+    if (stc & (STCvirtual | STCfinal))
+        storageClass &= ~(STCfinal | STCvirtual);
+    if (stc & (STCthrowable | STCnothrow))
+        storageClass &= ~(STCthrowable | STCnothrow);
+	if (stc & (STCimpure | STCpure))
+	    storageClass &= ~(STCimpure | STCpure);
+	if (stc & (STCgc | STCnogc))
+	    storageClass &= ~(STCgc | STCnogc);
 
     storageClass |= stc;
 
@@ -3545,10 +3556,15 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
                 goto L1;
 
             case TOKnot:
-                if (peek(&token)->value == TOKfinal)
+                nextToken();
+                switch (token.value)
                 {
-                    nextToken();
-                    stc = STCnotfinal; goto L1;
+                    case TOKfinal: stc = STCvirtual;     goto L1;
+                    case TOKnothrow: stc = STCthrowable; goto L1;
+                    case TOKpure: stc = STCimpure;       goto L1;
+                    case TOKat: stc = STCgc;
+                        nextToken();
+                        if (token.ident == Id::nogc)     goto L1;
                 }
                 break;
             case TOKstatic:     stc = STCstatic;         goto L1;
@@ -3981,7 +3997,7 @@ L2:
             FuncDeclaration *f =
                 new FuncDeclaration(loc, Loc(), ident, storage_class | (disable ? STCdisable : 0), t);
             if (pAttrs)
-                pAttrs->storageClass &= ~(STC_FUNCATTR | STCfinal);
+                pAttrs->storageClass &= (STCvirtual | STCthrowable | STCimpure | STCgc);
 
             if (tpl)
                 constraint = parseConstraint();
