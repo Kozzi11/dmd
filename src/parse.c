@@ -523,6 +523,7 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
             case TOKpure:         stc = STCpure;         goto Lstc;
             case TOKref:          stc = STCref;          goto Lstc;
             case TOKgshared:      stc = STCgshared;      goto Lstc;
+            case TOKdefault:      stc = STCdefault;      goto Lstc;
             //case TOKmanifest:   stc = STCmanifest;     goto Lstc;
             case TOKat:
             {
@@ -3562,6 +3563,7 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
             case TOKpure:       stc = STCpure;           goto L1;
             case TOKref:        stc = STCref;            goto L1;
             case TOKgshared:    stc = STCgshared;        goto L1;
+            case TOKdefault:    stc = STCdefault;        goto L1;
             case TOKenum:       stc = STCmanifest;       goto L1;
             case TOKat:
             {
@@ -3979,7 +3981,7 @@ L2:
             FuncDeclaration *f =
                 new FuncDeclaration(loc, Loc(), ident, storage_class | (disable ? STCdisable : 0), t);
             if (pAttrs)
-                pAttrs->storageClass &= ~STC_FUNCATTR;
+                pAttrs->storageClass &= ~(STC_FUNCATTR | STCfinal);
 
             if (tpl)
                 constraint = parseConstraint();
