@@ -515,7 +515,9 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
             		case TOKat:
             			nextToken();
                     	if (token.ident == Id::nogc)
+                    	{
                     		stc = STCgc;                 goto Lstc;
+                    	}
             	}
             	error("declaration expected, not '%s'",token.toChars());
             	goto Lerror;
@@ -3565,7 +3567,9 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
                     case TOKat:
                         nextToken();
                         if (token.ident == Id::nogc)
+                        {
                             stc = STCgc;                 goto L1;
+                        }
                 }
                 break;
             case TOKstatic:     stc = STCstatic;         goto L1;
