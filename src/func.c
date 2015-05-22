@@ -392,7 +392,18 @@ void FuncDeclaration::semantic(Scope *sc)
 
     foverrides.setDim(0);       // reset in case semantic() is being retried for this function
 
-    storage_class |= sc->stc & ~STCref;
+    StorageClass stc = sc->stc;
+
+    if (storage_class & (STCvirtual | STCfinal))
+        stc &= ~(STCfinal | STCvirtual);
+    if (storage_class & (STCthrowable | STCnothrow))
+        stc &= ~(STCthrowable | STCnothrow);
+    if (storage_class & (STCimpure | STCpure))
+        stc &= ~(STCimpure | STCpure);
+    if (storage_class & (STCgc | STCnogc))
+        stc &= ~(STCgc | STCnogc);
+    storage_class |= stc & ~STCref;
+
     ad = isThis();
     if (ad)
     {

@@ -976,7 +976,6 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
         storageClass &= ~(STCimpure | STCpure);
     if (stc & (STCgc | STCnogc))
         storageClass &= ~(STCgc | STCnogc);
-
     storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))
@@ -4001,7 +4000,7 @@ L2:
             FuncDeclaration *f =
                 new FuncDeclaration(loc, Loc(), ident, storage_class | (disable ? STCdisable : 0), t);
             if (pAttrs)
-                pAttrs->storageClass &= (STCvirtual | STCthrowable | STCimpure | STCgc);
+                pAttrs->storageClass = STCundefined;
 
             if (tpl)
                 constraint = parseConstraint();

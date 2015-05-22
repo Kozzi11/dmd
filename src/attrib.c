@@ -439,10 +439,10 @@ const char *StorageClassDeclaration::stcToChars(char tmp[], StorageClass& stc)
         { STCref,          TOKref },
         { STCtls },
         { STCgshared,      TOKgshared },
-        { STCvirtual,      TOKnot,      "!final" },
-        { STCthrowable,    TOKnot,      "!nothrow" },
-        { STCimpure,       TOKnot,      "!pure" },
-        { STCgc,           TOKnot,      "!@gc" },
+        { STCvirtual,      TOKnot,      "final" },
+        { STCthrowable,    TOKnot,      "nothrow" },
+        { STCimpure,       TOKnot,      "pure" },
+        { STCgc,           TOKnot,      "@gc" },
         { STCnogc,         TOKat,       "nogc" },
         { STCproperty,     TOKat,       "property" },
         { STCsafe,         TOKat,       "safe" },
@@ -466,6 +466,12 @@ const char *StorageClassDeclaration::stcToChars(char tmp[], StorageClass& stc)
             if (tok == TOKat)
             {
                 tmp[0] = '@';
+                strcpy(tmp + 1, table[i].id);
+                return tmp;
+            }
+            else if (tok == TOKnot)
+            {
+                tmp[0] = '!';
                 strcpy(tmp + 1, table[i].id);
                 return tmp;
             }
