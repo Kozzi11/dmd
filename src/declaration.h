@@ -88,8 +88,8 @@ enum PURE;
 #define STCreturn        0x100000000000LL // 'return ref' for function parameters
 #define STCvirtual       0x200000000000LL // negate final(virtual)
 #define STCthrowable     0x400000000000LL // negate nothrow(throwable)
-#define STCimpure        0x600000000000LL // negate pure(impure)
-#define STCgc            0x800000000000LL // negate @nogc(@gc)
+#define STCimpure        0x800000000000LL // negate pure(impure)
+#define STCgc            0x1000000000000LL // negate @nogc(@gc)
 
 const StorageClass STCStorageClass = (STCauto | STCscope | STCstatic | STCextern | STCconst | STCfinal |
     STCabstract | STCsynchronized | STCdeprecated | STCoverride | STClazy | STCalias |

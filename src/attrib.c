@@ -442,7 +442,6 @@ StorageClass StorageClassAttr::getSTC(Scope *sc)
         }
         else
             storageClass |= stc;
-
     }
     return storageClass;
 }
