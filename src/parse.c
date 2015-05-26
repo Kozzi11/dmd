@@ -6447,8 +6447,19 @@ bool Parser::skipAttributes(Token *t, Token **pt)
                 break;
             case TOKnot:
                 t = peek(t);
-                if (t->value == TOKfinal)
-                    break;
+                switch (t->value)
+                {
+                    case TOKfinal:
+                    case TOKnothrow:
+                    case TOKpure:
+                        break;
+                    case TOKat:
+                        t = peek(t);
+                        if (t->ident == Id::nogc)
+                        {
+                            break;
+                        }
+                }
                 goto Lerror;
             case TOKnothrow:
             case TOKpure:
