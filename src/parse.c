@@ -1080,6 +1080,24 @@ StorageClass Parser::parsePostfix(StorageClass storageClass, Expressions **pudas
         StorageClass stc;
         switch (token.value)
         {
+            case TOKnot:
+                nextToken();
+                switch (token.value)
+                {
+                    case TOKfinal: stc = STCvirtual;     break;
+                    case TOKnothrow: stc = STCthrowable; break;
+                    case TOKpure: stc = STCimpure;       break;
+                    case TOKat:
+                        nextToken();
+                        if (token.ident == Id::nogc)
+                        {
+                            stc = STCgc;                 break;
+                        }
+                    default:
+                        error("one of final,nothrow,pure,@nogc attribute expected, not '%s'",token.toChars());
+                        continue;
+                }
+                break;
             case TOKconst:      stc = STCconst;         break;
             case TOKimmutable:  stc = STCimmutable;     break;
             case TOKshared:     stc = STCshared;        break;
