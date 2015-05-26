@@ -1093,8 +1093,12 @@ StorageClass Parser::parsePostfix(StorageClass storageClass, Expressions **pudas
                         {
                             stc = STCgc;                 break;
                         }
+                        error("'@nogc' expected not '@%s'",token.toChars());
+                        nextToken();
+                        continue;
                     default:
-                        error("one of final,nothrow,pure,@nogc attribute expected, not '%s'",token.toChars());
+                        error("one of final,nothrow,pure attribute expected, not '%s'",token.toChars());
+                        nextToken();
                         continue;
                 }
                 break;
