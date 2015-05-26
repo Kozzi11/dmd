@@ -47,6 +47,7 @@ class TemplateDeclaration;
 class TemplateInstance;
 class StaticAssert;
 struct PrefixAttributes;
+class StorageClassExpression;
 
 /************************************
  * These control how parseStatement() works.
@@ -157,6 +158,7 @@ public:
     Expression *parseOrOrExp();
     Expression *parseCondExp();
     Expression *parseAssignExp();
+    StorageClassExpression *parseStorageClassExpression(StorageClass stc);
 
     Expressions *parseArguments();
 

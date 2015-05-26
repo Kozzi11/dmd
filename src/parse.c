@@ -229,6 +229,7 @@ struct PrefixAttributes
 {
     StorageClass storageClass;
     Expression *depmsg;
+    StorageClassExpression *stcexp;
     LINK link;
     Prot protection;
     unsigned alignment;
@@ -238,6 +239,7 @@ struct PrefixAttributes
     PrefixAttributes()
         : storageClass(STCundefined),
           depmsg(NULL),
+          stcexp(NULL),
           link(LINKdefault),
           protection(PROTundefined),
           alignment(0),
@@ -504,38 +506,38 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
                     goto Ldeclaration;
                 stc = STCwild;
                 goto Lstc;
-
-            case TOKnot:
-                nextToken();
-                switch (token.value)
-                {
-                    case TOKfinal: stc = STCvirtual;     goto Lstc;
-                    case TOKnothrow: stc = STCthrowable; goto Lstc;
-                    case TOKpure: stc = STCimpure;       goto Lstc;
-                    case TOKat:
-                        nextToken();
-                        if (token.ident == Id::nogc)
-                        {
-                            stc = STCgc;                 goto Lstc;
-                        }
-                }
-                error("declaration expected, not '%s'",token.toChars());
-                goto Lerror;
-            case TOKfinal:        stc = STCfinal;        goto Lstc;
+            case TOKfinal:        stc = STCfinal;        goto Lstcneg;
             case TOKauto:         stc = STCauto;         goto Lstc;
             case TOKscope:        stc = STCscope;        goto Lstc;
             case TOKoverride:     stc = STCoverride;     goto Lstc;
             case TOKabstract:     stc = STCabstract;     goto Lstc;
             case TOKsynchronized: stc = STCsynchronized; goto Lstc;
-            case TOKnothrow:      stc = STCnothrow;      goto Lstc;
-            case TOKpure:         stc = STCpure;         goto Lstc;
+            case TOKnothrow:      stc = STCnothrow;      goto Lstcneg;
+            case TOKpure:         stc = STCpure;         goto Lstcneg;
             case TOKref:          stc = STCref;          goto Lstc;
             case TOKgshared:      stc = STCgshared;      goto Lstc;
             //case TOKmanifest:   stc = STCmanifest;     goto Lstc;
+            Lstcneg:
+                if (peekNext() == TOKlparen)
+                {
+                    StorageClassExpression *se = parseStorageClassExpression(stc);
+                    pAttrs->stcexp = se;
+                    if (stc & STCfinal)
+                        pAttrs->storageClass &= ~(STCfinal | STCvirtual);
+                    else if (stc & STCnothrow)
+                        pAttrs->storageClass &= ~(STCthrowable | STCnothrow);
+                    else if (stc & STCpure)
+                        pAttrs->storageClass &= ~(STCimpure | STCpure);
+                    else if (stc & STCnogc)
+                        pAttrs->storageClass &= ~(STCgc | STCnogc);
+                    goto Lautodecl;
+                }
+            goto Lstc;
             case TOKat:
             {
                 Expressions *exps = NULL;
                 stc = parseAttribute(&exps);
+                if (stc == STCnogc) goto Lstcneg;
                 if (stc)
                     goto Lstc;                  // it's a predefined attribute
                 // no redundant/conflicting check for UDAs
@@ -593,9 +595,9 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
                 }
 
                 a = parseBlock(pLastDecl, pAttrs);
-                if (pAttrs->storageClass != STCundefined)
+                if (pAttrs->storageClass != STCundefined || pAttrs->stcexp)
                 {
-                    s = new StorageClassDeclaration(pAttrs->storageClass, a);
+                    s = new StorageClassDeclaration(pAttrs->storageClass, a, pAttrs->stcexp);
                     pAttrs->storageClass = STCundefined;
                 }
                 if (pAttrs->udas)
@@ -953,6 +955,7 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
 StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass stc,
     bool deprec)
 {
+
     if ((storageClass & stc) ||
         (storageClass & STCin && stc & (STCconst | STCscope)) ||
         (stc & STCin && storageClass & (STCconst | STCscope)))
@@ -967,16 +970,6 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
             error("redundant attribute '%s'", buf.peekString());
         return storageClass | stc;
     }
-
-    if (stc & (STCvirtual | STCfinal))
-        storageClass &= ~(STCfinal | STCvirtual);
-    if (stc & (STCthrowable | STCnothrow))
-        storageClass &= ~(STCthrowable | STCnothrow);
-    if (stc & (STCimpure | STCpure))
-        storageClass &= ~(STCimpure | STCpure);
-    if (stc & (STCgc | STCnogc))
-        storageClass &= ~(STCgc | STCnogc);
-    storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))
     {
@@ -1462,6 +1455,33 @@ Condition *Parser::parseStaticIfCondition()
     }
     condition = new StaticIfCondition(loc, exp);
     return condition;
+}
+
+/***********************************************
+ *      attribute (expression)
+ * Current token is attribute.
+ */
+
+StorageClassExpression *Parser::parseStorageClassExpression(StorageClass stc)
+{
+    StorageClassExpression *sexp = NULL;
+    Expression *exp;
+
+    nextToken();
+    if (token.value == TOKlparen)
+    {
+        nextToken();
+        exp = parseAssignExp();
+        check(TOKrparen);
+        sexp = new StorageClassExpression(stc, exp);
+        return sexp;
+    }
+
+    OutBuffer buf;
+    StorageClassDeclaration::stcToCBuffer(&buf, stc);
+    error("(compile time boolean expression) expected following attribute %s", buf.peekString());
+
+    return sexp;
 }
 
 
@@ -3555,35 +3575,26 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
                     break;
                 stc = STCwild;
                 goto L1;
-
-            case TOKnot:
-                nextToken();
-                switch (token.value)
-                {
-                    case TOKfinal: stc = STCvirtual;     goto L1;
-                    case TOKnothrow: stc = STCthrowable; goto L1;
-                    case TOKpure: stc = STCimpure;       goto L1;
-                    case TOKat:
-                        nextToken();
-                        if (token.ident == Id::nogc)
-                        {
-                            stc = STCgc;                 goto L1;
-                        }
-                }
-                break;
             case TOKstatic:     stc = STCstatic;         goto L1;
-            case TOKfinal:      stc = STCfinal;          goto L1;
+            case TOKfinal:      stc = STCfinal;          goto Lstcneg;
             case TOKauto:       stc = STCauto;           goto L1;
             case TOKscope:      stc = STCscope;          goto L1;
             case TOKoverride:   stc = STCoverride;       goto L1;
             case TOKabstract:   stc = STCabstract;       goto L1;
             case TOKsynchronized: stc = STCsynchronized; goto L1;
             case TOKdeprecated: stc = STCdeprecated;     goto L1;
-            case TOKnothrow:    stc = STCnothrow;        goto L1;
-            case TOKpure:       stc = STCpure;           goto L1;
+            case TOKnothrow:    stc = STCnothrow;        goto Lstcneg;
+            case TOKpure:       stc = STCpure;           goto Lstcneg;
             case TOKref:        stc = STCref;            goto L1;
             case TOKgshared:    stc = STCgshared;        goto L1;
             case TOKenum:       stc = STCmanifest;       goto L1;
+            Lstcneg:
+                if (peekNext() == TOKlparen)
+                {
+                    StorageClassExpression *se = parseStorageClassExpression(stc);
+                    continue;
+                }
+            goto L1;
             case TOKat:
             {
                 stc = parseAttribute(&udas);
@@ -3655,6 +3666,7 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
 Dsymbols *Parser::parseDeclarations(bool autodecl, PrefixAttributes *pAttrs, const utf8_t *comment)
 {
     StorageClass storage_class = STCundefined;
+    StorageClassExpression *stcexp = NULL;
     Type *ts;
     Type *t;
     Type *tfirst;
@@ -3812,7 +3824,7 @@ Dsymbols *Parser::parseDeclarations(bool autodecl, PrefixAttributes *pAttrs, con
 
         if (storage_class)
         {
-            s = new StorageClassDeclaration(storage_class, a);
+            s = new StorageClassDeclaration(storage_class, a, stcexp);
             a = new Dsymbols();
             a->push(s);
         }
@@ -3886,6 +3898,7 @@ L2:
     if (pAttrs)
     {
         storage_class |= pAttrs->storageClass;
+        stcexp = pAttrs->stcexp;
         //pAttrs->storageClass = STCundefined;
     }
 
@@ -3999,8 +4012,12 @@ L2:
             //printf("%s funcdecl t = %s, storage_class = x%lx\n", loc.toChars(), t->toChars(), storage_class);
             FuncDeclaration *f =
                 new FuncDeclaration(loc, Loc(), ident, storage_class | (disable ? STCdisable : 0), t);
+            f->stc_exp = stcexp;
             if (pAttrs)
+            {
                 pAttrs->storageClass = STCundefined;
+                pAttrs->stcexp = NULL;
+            }
 
             if (tpl)
                 constraint = parseConstraint();
@@ -4024,7 +4041,7 @@ L2:
 
                     Dsymbols *ax = new Dsymbols();
                     ax->push(s);
-                    s = new StorageClassDeclaration(STCstatic, ax);
+                    s = new StorageClassDeclaration(STCstatic, ax, stcexp);
                 }
             }
             if (link != linkage)
@@ -6428,13 +6445,15 @@ bool Parser::skipAttributes(Token *t, Token **pt)
             case TOKimmutable:
             case TOKshared:
             case TOKwild:
-            case TOKfinal:
             case TOKauto:
             case TOKscope:
             case TOKoverride:
             case TOKabstract:
             case TOKsynchronized:
                 break;
+            case TOKnothrow:
+            case TOKpure:
+            case TOKfinal:
             case TOKdeprecated:
                 if (peek(t)->value == TOKlparen)
                 {
@@ -6450,8 +6469,6 @@ bool Parser::skipAttributes(Token *t, Token **pt)
                 if (t->value == TOKfinal)
                     break;
                 goto Lerror;
-            case TOKnothrow:
-            case TOKpure:
             case TOKref:
             case TOKgshared:
             case TOKreturn:
@@ -6461,6 +6478,12 @@ bool Parser::skipAttributes(Token *t, Token **pt)
                 t = peek(t);
                 if (t->value == TOKidentifier)
                 {
+                    if (t->ident == Id::nogc && peek(t)->value == TOKlparen)
+                    {
+                        t = peek(t);
+                        if (!skipParens(t, &t))
+                            goto Lerror;
+                    }
                     /* @identifier
                      * @identifier!arg
                      * @identifier!(arglist)

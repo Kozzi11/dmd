@@ -276,6 +276,7 @@ FuncDeclaration::FuncDeclaration(Loc loc, Loc endloc, Identifier *id, StorageCla
     //printf("FuncDeclaration(id = '%s', type = %p)\n", id->toChars(), type);
     //printf("storage_class = x%x\n", storage_class);
     this->storage_class = storage_class;
+    this->stc_exp = NULL;
     this->type = type;
     if (type)
     {
@@ -341,6 +342,7 @@ Dsymbol *FuncDeclaration::syntaxCopy(Dsymbol *s)
         s ? (FuncDeclaration *)s
           : new FuncDeclaration(loc, endloc, ident, storage_class, type->syntaxCopy());
     f->outId = outId;
+    f->stc_exp = stc_exp;
     f->frequire = frequire ? frequire->syntaxCopy() : NULL;
     f->fensure  = fensure  ? fensure->syntaxCopy()  : NULL;
     f->fbody    = fbody    ? fbody->syntaxCopy()    : NULL;
@@ -391,6 +393,11 @@ void FuncDeclaration::semantic(Scope *sc)
     unsigned dprogress_save = Module::dprogress;
 
     foverrides.setDim(0);       // reset in case semantic() is being retried for this function
+
+    if (stc_exp)
+    {
+        storage_class |= stc_exp->getSTC(sc);
+    }
 
     StorageClass stc = sc->stc;
 

@@ -328,16 +328,17 @@ void AttribDeclaration::addLocalClass(ClassDeclarations *aclasses)
 
 /************************* StorageClassDeclaration ****************************/
 
-StorageClassDeclaration::StorageClassDeclaration(StorageClass stc, Dsymbols *decl)
+StorageClassDeclaration::StorageClassDeclaration(StorageClass stc, Dsymbols *decl, StorageClassExpression *stcexp)
         : AttribDeclaration(decl)
 {
     this->stc = stc;
+    this->stcexp = stcexp;
 }
 
 Dsymbol *StorageClassDeclaration::syntaxCopy(Dsymbol *s)
 {
     assert(!s);
-    return new StorageClassDeclaration(stc, Dsymbol::arraySyntaxCopy(decl));
+    return new StorageClassDeclaration(stc, Dsymbol::arraySyntaxCopy(decl), stcexp);
 }
 
 bool StorageClassDeclaration::oneMember(Dsymbol **ps, Identifier *ident)
@@ -372,6 +373,11 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
 {
     StorageClass scstc = sc->stc;
 
+    if (stcexp)
+    {
+        stc |= stcexp->getSTC(sc);
+    }
+
     /* These sets of storage classes are mutually exclusive,
      * so choose the innermost or most recent one.
      */
@@ -399,6 +405,47 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
     return createNewScope(sc, scstc, sc->linkage, sc->protection, sc->explicitProtection, sc->structalign);
 }
 
+/************************* StorageClassExpression ****************************/
+
+StorageClassExpression::StorageClassExpression(StorageClass stc, Expression *exp)
+{
+    this->stc = stc;
+    this->exp = exp;
+}
+
+StorageClass StorageClassExpression::getSTC(Scope *sc)
+{
+    StorageClass storageClass = STCundefined;
+
+    Expression *e = this->exp;
+    if (e)
+    {
+        sc = sc->startCTFE();
+        e = e->semantic(sc);
+        e = resolveProperties(sc, e);
+        sc = sc->endCTFE();
+
+        e = e->ctfeInterpret();
+
+        if (e->isBool(false))
+        {
+            if (stc & STCfinal)
+                storageClass |= STCvirtual;
+            else if (stc & STCnothrow)
+                storageClass |= STCthrowable;
+            else if (stc & STCnogc)
+                storageClass |= STCgc;
+            else if (stc & STCpure)
+                storageClass |= STCimpure;
+            else
+                storageClass |= stc;
+        }
+        else
+            storageClass |= stc;
+
+    }
+    return storageClass;
+}
 /*************************************************
  * Pick off one of the storage classes from stc,
  * and return a pointer to a string representation of it.
