@@ -229,7 +229,7 @@ struct PrefixAttributes
 {
     StorageClass storageClass;
     Expression *depmsg;
-    StorageClassExpression *stcexp;
+    StorageClassAttr *stcexp;
     LINK link;
     Prot protection;
     unsigned alignment;
@@ -520,7 +520,7 @@ Dsymbols *Parser::parseDeclDefs(int once, Dsymbol **pLastDecl, PrefixAttributes 
             Lstcneg:
                 if (peekNext() == TOKlparen)
                 {
-                    StorageClassExpression *se = parseStorageClassExpression(stc);
+                    StorageClassAttr *se = parseStorageClassExpression(stc);
                     pAttrs->stcexp = se;
                     if (stc & STCfinal)
                         pAttrs->storageClass &= ~(STCfinal | STCvirtual);
@@ -970,6 +970,8 @@ StorageClass Parser::appendStorageClass(StorageClass storageClass, StorageClass 
             error("redundant attribute '%s'", buf.peekString());
         return storageClass | stc;
     }
+
+    storageClass |= stc;
 
     if (stc & (STCconst | STCimmutable | STCmanifest))
     {
@@ -1462,9 +1464,9 @@ Condition *Parser::parseStaticIfCondition()
  * Current token is attribute.
  */
 
-StorageClassExpression *Parser::parseStorageClassExpression(StorageClass stc)
+StorageClassAttr *Parser::parseStorageClassExpression(StorageClass stc)
 {
-    StorageClassExpression *sexp = NULL;
+    StorageClassAttr *sexp = NULL;
     Expression *exp;
 
     nextToken();
@@ -1473,7 +1475,7 @@ StorageClassExpression *Parser::parseStorageClassExpression(StorageClass stc)
         nextToken();
         exp = parseAssignExp();
         check(TOKrparen);
-        sexp = new StorageClassExpression(stc, exp);
+        sexp = new StorageClassAttr(stc, exp);
         return sexp;
     }
 
@@ -3591,7 +3593,7 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
             Lstcneg:
                 if (peekNext() == TOKlparen)
                 {
-                    StorageClassExpression *se = parseStorageClassExpression(stc);
+                    StorageClassAttr *se = parseStorageClassExpression(stc);
                     continue;
                 }
             goto L1;
@@ -3666,7 +3668,7 @@ void Parser::parseStorageClasses(StorageClass &storage_class, LINK &link, unsign
 Dsymbols *Parser::parseDeclarations(bool autodecl, PrefixAttributes *pAttrs, const utf8_t *comment)
 {
     StorageClass storage_class = STCundefined;
-    StorageClassExpression *stcexp = NULL;
+    StorageClassAttr *stcexp = NULL;
     Type *ts;
     Type *t;
     Type *tfirst;

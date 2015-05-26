@@ -58,12 +58,12 @@ public:
     void accept(Visitor *v) { v->visit(this); }
 };
 
-class StorageClassExpression
+class StorageClassAttr
 {
 public:
     StorageClass stc;
     Expression *exp;
-    StorageClassExpression(StorageClass stc, Expression *exp = NULL);
+    StorageClassAttr(StorageClass stc, Expression *exp = NULL);
     StorageClass getSTC(Scope *sc);
 };
 
@@ -71,9 +71,9 @@ class StorageClassDeclaration : public AttribDeclaration
 {
 public:
     StorageClass stc;
-    StorageClassExpression *stcexp;
+    StorageClassAttr *stcexp;
 
-    StorageClassDeclaration(StorageClass stc,Dsymbols *decl, StorageClassExpression *stcexp = NULL);
+    StorageClassDeclaration(StorageClass stc, Dsymbols *decl, StorageClassAttr *stcexp = NULL);
     Dsymbol *syntaxCopy(Dsymbol *s);
     Scope *newScope(Scope *sc);
     bool oneMember(Dsymbol **ps, Identifier *ident);

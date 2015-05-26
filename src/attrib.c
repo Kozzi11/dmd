@@ -328,7 +328,7 @@ void AttribDeclaration::addLocalClass(ClassDeclarations *aclasses)
 
 /************************* StorageClassDeclaration ****************************/
 
-StorageClassDeclaration::StorageClassDeclaration(StorageClass stc, Dsymbols *decl, StorageClassExpression *stcexp)
+StorageClassDeclaration::StorageClassDeclaration(StorageClass stc, Dsymbols *decl, StorageClassAttr *stcexp)
         : AttribDeclaration(decl)
 {
     this->stc = stc;
@@ -407,13 +407,13 @@ Scope *StorageClassDeclaration::newScope(Scope *sc)
 
 /************************* StorageClassExpression ****************************/
 
-StorageClassExpression::StorageClassExpression(StorageClass stc, Expression *exp)
+StorageClassAttr::StorageClassAttr(StorageClass stc, Expression *exp)
 {
     this->stc = stc;
     this->exp = exp;
 }
 
-StorageClass StorageClassExpression::getSTC(Scope *sc)
+StorageClass StorageClassAttr::getSTC(Scope *sc)
 {
     StorageClass storageClass = STCundefined;
 

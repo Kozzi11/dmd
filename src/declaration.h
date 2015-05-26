@@ -27,7 +27,7 @@ class Module;
 class ForeachStatement;
 class FuncDeclaration;
 class ExpInitializer;
-class StorageClassExpression;
+class StorageClassAttr;
 class StructDeclaration;
 struct InterState;
 struct CompiledCtfeFunction;
@@ -553,7 +553,7 @@ public:
                                         // this one is overriding
     bool inferRetType;                  // true if return type is to be inferred
     StorageClass storage_class2;        // storage class for template onemember's
-    StorageClassExpression *stc_exp;    // storage class expression for revert attr
+    StorageClassAttr *stc_exp;    // storage class expression for revert attr
 
     // Things that should really go into Scope
     int hasReturnExp;                   // 1 if there's a return exp; statement
