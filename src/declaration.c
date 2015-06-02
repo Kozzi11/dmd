@@ -800,9 +800,22 @@ void VarDeclaration::semantic(Scope *sc)
         scope = NULL;
     }
 
+    StorageClass stc = sc->stc;
+
+    /* If STCvirtual is set remove STCfinal
+     */
+    if (storage_class & (STCvirtual | STCfinal))
+        stc &= ~(STCfinal | STCvirtual);
+
+    /* If STCgc is set remove STCnogc
+         */
+    if (storage_class & (STCgc | STCnogc))
+        stc &= ~(STCgc | STCnogc);
+
+
     /* Pick up storage classes from context, but skip synchronized
      */
-    storage_class |= (sc->stc & ~STCsynchronized);
+    storage_class |= (stc & ~STCsynchronized);
     if (storage_class & STCextern && init)
         error("extern symbols cannot have initializers");
 
