@@ -5748,10 +5748,13 @@ public:
     ubyte iswild;               // bit0: inout on params, bit1: inout on qualifier
     Expressions* fargs;         // function arguments
     int inuse;
+    Type originalNext;
 
     extern (D) this(Parameters* parameters, Type treturn, int varargs, LINK linkage, StorageClass stc = 0)
     {
         super(Tfunction, treturn);
+        if (linkage == LINKcpp && cast(TypeIdentifier)treturn)
+            this.originalNext = treturn;
         //if (!treturn) *(char*)0=0;
         //    assert(treturn);
         assert(0 <= varargs && varargs <= 2);

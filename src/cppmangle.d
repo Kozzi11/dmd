@@ -474,7 +474,10 @@ static if (TARGET_LINUX || TARGET_OSX || TARGET_FREEBSD || TARGET_OPENBSD || TAR
             {
                 source_name(p);
                 this.is_top_level = true;
-                tf.nextOf().accept(this);
+                if (tf.originalNext)
+                    buf.writestring("T_");
+                else
+                    tf.nextOf().accept(this);
                 this.is_top_level = false;
             }
             else
